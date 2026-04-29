@@ -57,14 +57,14 @@ Compute the shape functions for the Poisson problem.
 #@memoize function shapef_2DLFE(quadrule::TriQuad)
 function shapef_2DLFE(quadrule::TriQuad)
     ###########################################################################
-    x_hat = quadrule.points[1,:]
-    y_hat = quadrule.points[2,:]
+    points = quadrule.points
+    x = points[1,:]
+    y = points[2,:]
 
     phi = [
-        (1 .- x_hat .- y_hat),          # phi_1
-        x_hat,                          # phi_2
-        x_hat .* y_hat,                 # phi_3
-         y_hat                          # phi_4
+        (1 .- x .- y),          # phi_1
+        x,                      # phi_2
+        y                       # phi_3
     ]
 
     return phi
@@ -86,7 +86,12 @@ Compute the gradients of the shape functions for the Poisson problem.
 #@memoize function ∇shapef_2DLFE(quadrule::TriQuad)
 function ∇shapef_2DLFE(quadrule::TriQuad)
     ###########################################################################
-    ############################ ADD CODE HERE ################################
+    mat = [-1  1  0;
+            1  0  1]   # matrice 2×3
+
+    q = size(quadrule.points, 2)
+
+    return repeat(mat, 1, 1, q)
     ########################################################################### 
 end
 
@@ -108,6 +113,26 @@ Assemble the local stiffness matrix and force vector for the Poisson problem.
 """
 function poisson_assemble_local!(Ke::Matrix, fe::Vector, mesh::Mesh, cell_index::Integer, f)
     ###########################################################################
-    ############################ ADD CODE HERE ################################
+    ke = zeros(3,3)
+    fe = zeros(3)
+    quadrule = Q2_ref
+    ak = mesh.ak[:, cell_index]
+    Bk = mesh.Bk[:, :, cell_index]
+    invBk = mesh.invBk[:, :, cell_index]
+    pe = Bk * quadrule.points + ak
+    phie = shapef_2DLFE(quadrule)
+    gradphie = mult(invBk.T,∇shapef_2DLF(quadrule), axis = 1)
+    for p = 1:q
+        wp = quadrule[p].abs(mesh.detBk[cell_index])
+        for i = 1:3
+            v = phie[i,p]
+            gradv = gradphie[:, i, p]
+            fe[i] += wp*v*f(pe[:, p])
+            for j = 1:3
+                gradu = gradphie[:, j, p]
+                ke[j, i] += wp * gradv *gradu
+            end
+        end
+    end
     ########################################################################### 
 end

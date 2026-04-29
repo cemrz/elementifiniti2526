@@ -158,7 +158,7 @@ Compute the L2 error between a function and a finite element solution over a mes
 """
 function L2error(u::Function, uh::Vector, mesh::Mesh, ref_quad::TriQuad)
     ###########################################################################
-    ############################ ADD CODE HERE ################################
+    
     ########################################################################### 
 end
 

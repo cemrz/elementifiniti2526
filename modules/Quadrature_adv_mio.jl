@@ -138,7 +138,9 @@ Evaluate a linear finite element solution at given quadrature points within an e
 """
 function eval_u(uh::Vector, points_elem::Matrix, mesh::Mesh, tri_idx::Integer, quadrule::TriQuad)
     ###########################################################################
-    ############################ ADD CODE HERE ################################
+
+    
+    
     ########################################################################### 
 end
 
@@ -158,7 +160,18 @@ Compute the L2 error between a function and a finite element solution over a mes
 """
 function L2error(u::Function, uh::Vector, mesh::Mesh, ref_quad::TriQuad)
     ###########################################################################
-    
+    Bk, ak = get_Bk!(mesh)
+    detBk = get_detBk!(mesh)
+    p_cap, w_cap = ref_quad.points, ref_quad.weights
+    I = 0.0
+    for i = 1:size(mesh.T, 2)
+        p = Bk[:, :, i] * p_cap .+ ak[:, i]
+        u_h = eval_u(u, points_elem, mesh, i, ref_quad)
+        v = mesh.T[:, i]
+        uh_ve = shapef_2DLFE(ref_quad, p)' * uh[v]
+        I += sum((u_h - uh_ve).^2 .* w_cap) * detBk[i]
+    end
+    return sqrt(I)
     ########################################################################### 
 end
 

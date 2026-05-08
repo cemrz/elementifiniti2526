@@ -1,5 +1,5 @@
 import Pkg
-# Pkg.activate("elementifinitiunipv_pkg")
+Pkg.activate("elementifinitiunipv_pkg")
 using Revise
 using LinearAlgebra
 using SparseArrays

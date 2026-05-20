@@ -200,6 +200,26 @@ Compute the H1 semi-norm error between the gradient of a function and a finite e
 """
 function H1semierror(∇u::Function, uh::Vector, mesh::Mesh, ref_quad::TriQuad)
     ###########################################################################
-    ############################ ADD CODE HERE ################################
+    # Compute matrices for pushforward of reference element
+    Bk, ak = get_Bk!(mesh)
+    # Compute the absolute value of the determinant and the inverse of Bk
+    detBk = get_detBk!(mesh)
+    invBk = get_invBk!(mesh)
+    # Get quadrature points and weights on the reference element
+    points_refelem, weights_refelem = ref_quad.points, ref_quad.weights
+    points_elem = zeros(Float64, size(points_refelem))
+    ∇u_evals = zeros(Float64, size(weights_refelem))
+    ∇uh_evals = zeros(Float64, size(weights_refelem))
+    # Loop across all elements
+    n_tri = size(mesh.T, 2)
+    I_approx::Float64 = 0
+    for i = 1:n_tri
+        points_elem = Bk[:, :, i] * points_refelem .+ ak[:, i] # Points in the current element
+        ∇u_evals = eval_u(∇u, points_elem, mesh, i, ref_quad)
+        ∇uh_evals = eval_u(∇uh, points_elem, mesh, i, ref_quad)
+        I_approx += sum(sum((∇u_evals-∇uh_evals) .^2, dims=1) .* weights_refelem) * detBk[i]
+    end
+    return sqrt(I_approx)
+
     ########################################################################### 
 end
